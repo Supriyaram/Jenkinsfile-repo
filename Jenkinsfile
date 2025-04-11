@@ -22,5 +22,7 @@ pipeline {
         stage('Result'){
             steps{
                 echo 'ok'
-          }
+                  }
+            }
+        }
     }
