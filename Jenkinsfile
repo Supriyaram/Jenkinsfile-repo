@@ -12,7 +12,7 @@ pipeline {
     }
 
     stages {
-        stage('Build Service') {
+        stage('Pull Service') {
             steps {
                     echo "Selected Service: ${params.SERVICE_NAME}"
                     git url: "https://github.com/Supriyaram/${params.SERVICE_NAME}", branch: 'main'
