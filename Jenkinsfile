@@ -23,6 +23,7 @@ pipeline {
             steps{
                    script {
                         def jenkinsfilePath = "${params.SERVICE_NAME}/Jenkinsfile"
+                        echo 'jenkinsfilePath: ${jenkinsfilePath}'
                         def microservicePipeline = load jenkinsfilePath
                         microservicePipeline()
                 }
