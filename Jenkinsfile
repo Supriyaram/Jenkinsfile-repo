@@ -23,7 +23,7 @@ pipeline {
             steps{
                    script {
                        
-                        def jenkinsfilePath = "${pwd}/Jenkinsfile"
+                        def jenkinsfilePath = "${pwd}/workspace/app_pipeline/Jenkinsfile"
                         echo "jenkinsfilePath: ${jenkinsfilePath}"
                         def microservicePipeline = load jenkinsfilePath
                         microservicePipeline()
