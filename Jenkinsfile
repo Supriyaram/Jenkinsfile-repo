@@ -21,12 +21,11 @@ pipeline {
          }
         stage('Build Service'){
             steps{
-                script {
-                        echo "Selected Service: ${params.SERVICE_NAME}"
-                        def JENKINSFILE_PATH = "https://github.com/Supriyaram/${params.SERVICE_NAME}/Jenkinsfile"
-                        def microservicePipeline = load "${JENKINSFILE_PATH}"
+                   script {
+                        def jenkinsfilePath = "${params.SERVICE_NAME}/Jenkinsfile"
+                        def microservicePipeline = load jenkinsfilePath
                         microservicePipeline()
-                }    
+                }
             }
         }
         stage('Verify Clone') {
