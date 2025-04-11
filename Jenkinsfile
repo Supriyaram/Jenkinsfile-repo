@@ -19,17 +19,7 @@ pipeline {
                   }
                     
          }
-        stage('Build Service'){
-            steps{
-                   script {
-                       
-                        def jenkinsfilePath = "${pwd}/workspace/app_pipeline/Jenkinsfile"
-                        echo "jenkinsfilePath: ${jenkinsfilePath}"
-                        def microservicePipeline = load jenkinsfilePath
-                        microservicePipeline()
-                }
-            }
-        }
+        
         stage('Verify Clone') {
             steps {
                     sh 'ls -la Jenkinsfile'
