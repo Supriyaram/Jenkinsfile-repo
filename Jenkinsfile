@@ -12,20 +12,15 @@ pipeline {
     }
 
     stages {
-        stage('Pull Service') {
+        stage('Trigger Service Pipeline') {
             steps {
-                    echo "Selected Service: ${params.SERVICE_NAME}"
-                    git url: "https://github.com/Supriyaram/${params.SERVICE_NAME}", branch: 'main'
-                  }
-                    
-         }
-        
-        stage('Verify Clone') {
-            steps {
-                    sh 'ls -la Jenkinsfile'
+                script {
+                    def targetJob = "${params.SERVICE_NAME}-pipeline"
+                    echo "Triggering job: ${targetJob}"
+                    build job: targetJob
                 }
             }
-
         }
+    }
     }
 
