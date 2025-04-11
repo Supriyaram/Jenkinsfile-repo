@@ -12,12 +12,15 @@ pipeline {
     }
 
     stages {
-        stage('Build Dispatcher') {
+        stage('Build Service') {
             steps {
                     echo "Selected Service: ${params.SERVICE_NAME}"
                     git url: 'https://github.com/Supriyaram/${params.SERVICE_NAME}', branch: 'main'
                   }
                     
                 }
+        stage('Result'){
+            steps{
+                echo 'ok'
           }
     }
