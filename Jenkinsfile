@@ -33,6 +33,7 @@ pipeline {
                             ]
                     }
             }
+        }
         stage('Verify Clone') {
             steps {
                     sh 'ls -la Jenkinsfile'
@@ -41,3 +42,4 @@ pipeline {
 
         }
     }
+
