@@ -19,10 +19,11 @@ pipeline {
                   }
                     
                 }
-        stage('Result'){
-            steps{
-                echo 'ok'
-                  }
+        stage('Verify Clone') {
+            steps {
+                    sh 'ls -la'
+                }
             }
+
         }
     }
