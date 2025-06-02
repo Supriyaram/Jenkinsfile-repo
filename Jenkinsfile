@@ -19,7 +19,7 @@ pipeline {
                 script {
                     env.SLAVE_LABEL = "agent-${BUILD_NUMBER}"
 
-                    def templateId = "lt-xxxxxxxxxxxxx"
+                    def templateId = "lt-026fe4def668209ae"
 
                     // Launch EC2
                     env.INSTANCE_ID = sh(script: """
