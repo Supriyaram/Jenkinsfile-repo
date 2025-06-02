@@ -21,7 +21,7 @@ pipeline {
                     } else if (params.REPO_SELECTION == 'repo3') {
                         repoUrl = env.REPO3_URL
                     }
-                    git url: repoUrl, branch: params.BRANCH_NAME, credentialsId: 'your-git-cred-id'
+                    echo repoUrl
                 }
             }
         }
