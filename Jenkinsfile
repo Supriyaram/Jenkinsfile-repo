@@ -22,6 +22,7 @@ pipeline {
                     sh "pwd"
                     sh "curl ifconfig.me"
                     sh "./jenkins/launch_slave_from_template.sh ${env.SLAVE_LABEL}"
+                    sh "echo ${env.INSTANCE_ID}"
                     env.INSTANCE_ID = readFile('slave_instance_id.txt').trim()
                     timeout(time: 3, unit: 'MINUTES') {
                         waitUntil {
