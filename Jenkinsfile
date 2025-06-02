@@ -7,26 +7,53 @@ pipeline {
     environment {
         REPO1_URL = 'https://github.com/Supriyaram/patient-management.git'
         REPO2_URL = 'https://github.com/Supriyaram/schedule-management.git'
-        
     }
+
     stages {
-        stage('Checkout') {
+        stage('Provision EC2 Slave') {
             steps {
                 script {
-                    def repoUrl = ''
-                    if (params.REPO_SELECTION == 'patient-management') {
-                        repoUrl = env.REPO1_URL
-                    } else if (params.REPO_SELECTION == 'schedule-management') {
-                        repoUrl = env.REPO2_URL
+                    env.SLAVE_LABEL = "agent-${BUILD_NUMBER}"
+                    sh "./jenkins/launch_slave_from_template.sh ${env.SLAVE_LABEL}"
+                    env.INSTANCE_ID = readFile('slave_instance_id.txt').trim()
+
+                    timeout(time: 3, unit: 'MINUTES') {
+                        waitUntil {
+                            nodeExists(env.SLAVE_LABEL)
+                        }
                     }
-                    git url: repoUrl, branch: params.BRANCH_NAME
                 }
             }
         }
-        stage('Build') {
-            steps {
-                sh 'mvn --version'
-                sh 'mvn clean verify'
+
+        stage('Run on EC2 Agent') {
+            agent { label "${env.SLAVE_LABEL}" }
+            stages {
+                stage('Checkout') {
+                    steps {
+                        script {
+                            def repoUrl = params.REPO_SELECTION == 'patient-management' ? env.REPO1_URL : env.REPO2_URL
+                            git url: repoUrl, branch: params.BRANCH_NAME
+                        }
+                    }
+                }
+
+                stage('Build & Test') {
+                    steps {
+                        sh 'mvn clean verify'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if (env.INSTANCE_ID) {
+                    echo "Cleaning up EC2 instance: ${env.INSTANCE_ID}"
+                    sh "./jenkins/terminate_slave.sh ${env.INSTANCE_ID}"
+                }
             }
         }
     }
