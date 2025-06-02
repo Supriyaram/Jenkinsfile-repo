@@ -14,14 +14,11 @@ pipeline {
             steps {
                 script {
                     def repoUrl = ''
-                    if (params.REPO_SELECTION == 'repo1') {
+                    if (params.REPO_SELECTION == 'patient-management') {
                         repoUrl = env.REPO1_URL
-                    } else if (params.REPO_SELECTION == 'repo2') {
+                    } else if (params.REPO_SELECTION == 'schedule-management') {
                         repoUrl = env.REPO2_URL
-                    } else if (params.REPO_SELECTION == 'repo3') {
-                        repoUrl = env.REPO3_URL
                     }
-                    echo repoUrl
                 }
             }
         }
