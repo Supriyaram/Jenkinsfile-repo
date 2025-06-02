@@ -19,6 +19,7 @@ pipeline {
                     } else if (params.REPO_SELECTION == 'schedule-management') {
                         repoUrl = env.REPO2_URL
                     }
+                    git url: repoUrl, branch: params.BRANCH_NAME, 
                 }
             }
         }
