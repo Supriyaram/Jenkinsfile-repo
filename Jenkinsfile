@@ -56,41 +56,40 @@ pipeline {
         }
 
 
-
         stage('Run on EC2 Agent') {
             agent { label "${env.SLAVE_LABEL}" }
-                    steps {
-                        script {
-                            // Choose the correct repo URL based on parameter
-                            def repoUrl = (params.REPO_SELECTION == 'patient-management') ?env.REPO1_URL : env.REPO2_URL
+            steps {
+                script {
+                    // Choose the correct repo URL based on parameter
+                    def repoUrl = (params.REPO_SELECTION == 'patient-management') ? env.REPO1_URL : env.REPO2_URL
 
-                            echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
+                    echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
 
-                            // Checkout the repository
-                            checkout([
-                                    $class           : 'GitSCM',
-                                    branches         : [[name: "*/${params.BRANCH_NAME}"]],
-                                    userRemoteConfigs: [[url: repoUrl]]
-                            ])
-                        }
+                    // Checkout the repository
+                    checkout([
+                            $class           : 'GitSCM',
+                            branches         : [[name: "*/${params.BRANCH_NAME}"]],
+                            userRemoteConfigs: [[url: repoUrl]]
+                    ])
+                }
             }
         }
 
 
         stage('Build & Test') {
-                    steps {
-                        script {
-                            // You may use withMaven if you have the Maven plugin
-                            def mvnHome = tool name: 'Maven 3', type: 'maven'
-                            withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-                                sh 'mvn clean verify' // use `bat` on Windows agents or `sh` only if necessary
-                            }
-                        }
+            steps {
+                script {
+                    // You may use withMaven if you have the Maven plugin
+                    def mvnHome = tool name: 'Maven 3', type: 'maven'
+                    withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
+                        sh 'mvn clean verify' // use `bat` on Windows agents or `sh` only if necessary
                     }
                 }
             }
         }
-    
+    }
+}
+
 
 //    post {
 //        always {
