@@ -1,9 +1,11 @@
 pipeline {
-    agent any
+
+
     parameters {
-        choice(name: 'REPO_SELECTION', choices: ['patient-management', 'schedule-management'], description: 'Choose repo')
-        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Enter branch')
+        choice(name: 'REPO_SELECTION', choices: ['patient-management', 'schedule-management'], description: 'Choose the repo')
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to checkout')
     }
+
     environment {
         REPO1_URL = 'https://github.com/Supriyaram/patient-management.git'
         REPO2_URL = 'https://github.com/Supriyaram/schedule-management.git'
@@ -14,54 +16,106 @@ pipeline {
             steps {
                 script {
                     env.SLAVE_LABEL = "agent-${BUILD_NUMBER}"
-                    // Ensure scripts are executable
-                    sh 'chmod +x ./jenkins/launch_slave_from_template.sh'
-                    sh 'chmod +x ./jenkins/terminate_slave.sh'
+                    env.INSTANCE_ID = launchEc2Instance(env.SLAVE_LABEL)
 
-                    // Run the script to launch EC2
-                    sh "pwd"
-                    sh "curl ifconfig.me"
-                    sh "./jenkins/launch_slave_from_template.sh ${env.SLAVE_LABEL}"
-                    sh "echo ${env.INSTANCE_ID}"
-                    env.INSTANCE_ID = readFile('slave_instance_id.txt').trim()
-                    timeout(time: 3, unit: 'MINUTES') {
-                        waitUntil {
-                            nodeExists(env.SLAVE_LABEL)
-                        }
+                    // Wait until EC2 is running
+                    waitUntil {
+                        sh(script: """
+                             aws ec2 describe-instances --instance-ids ${env.INSTANCE_ID} \
+                             --query "Reservations[0].Instances[0].State.Name" --output text
+                            """, returnStdout: true).trim() == "running"
                     }
+
+                    // Get private IP
+                    def privateIP = sh(script: """
+                            aws ec2 describe-instances --instance-ids ${env.INSTANCE_ID} \
+                            --query "Reservations[0].Instances[0].PrivateIpAddress" --output text
+                            """, returnStdout: true).trim()
+
+                    // Wait for SSH port to be open on private IP
+                    waitUntil {
+                        sh(script: "nc -z ${privateIP} 22", returnStatus: true) == 0
+                    }
+
+                    // Register EC2 instance as Jenkins agent using private IP
+                    def node = new DumbSlave(
+                            env.SLAVE_LABEL, "/home/ubuntu/jenkins",
+                            new SSHLauncher(privateIP, 22, 'jenkins-ssh-key')
+                    )
+                    node.setLabelString(env.SLAVE_LABEL)
+                    Jenkins.instance.addNode(node)
+
+                    // Wait until the agent is online
+                    waitUntil {
+                        Jenkins.instance.getNode(env.SLAVE_LABEL)?.toComputer()?.isOnline()
+                    }
+
+                    echo "Agent ${env.SLAVE_LABEL} is ready using private IP: ${privateIP}"
                 }
             }
         }
+
+
 
         stage('Run on EC2 Agent') {
             agent { label "${env.SLAVE_LABEL}" }
-            stages {
-                stage('Checkout') {
                     steps {
                         script {
-                            def repoUrl = params.REPO_SELECTION == 'patient-management' ? env.REPO1_URL : env.REPO2_URL
-                            git url: repoUrl, branch: params.BRANCH_NAME
+                            // Choose the correct repo URL based on parameter
+                            def repoUrl = (params.REPO_SELECTION == 'patient-management') ?env.REPO1_URL : env.REPO2_URL
+
+                            echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
+
+                            // Checkout the repository
+                            checkout([
+                                    $class           : 'GitSCM',
+                                    branches         : [[name: "*/${params.BRANCH_NAME}"]],
+                                    userRemoteConfigs: [[url: repoUrl]]
+                            ])
+                        }
+            }
+        }
+
+
+        stage('Build & Test') {
+                    steps {
+                        script {
+                            // You may use withMaven if you have the Maven plugin
+                            def mvnHome = tool name: 'Maven 3', type: 'maven'
+                            withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
+                                sh 'mvn clean verify' // use `bat` on Windows agents or `sh` only if necessary
+                            }
                         }
                     }
                 }
-
-                stage('Build & Test') {
-                    steps {
-                        sh 'mvn clean verify'
-                    }
-                }
             }
         }
-    }
+    
 
-    post {
-        always {
-            script {
-                if (env.INSTANCE_ID) {
-                    echo "Cleaning up EC2 instance: ${env.INSTANCE_ID}"
-                    sh "./jenkins/terminate_slave.sh ${env.INSTANCE_ID}"
-                }
-            }
-        }
-    }
+//    post {
+//        always {
+//            script {
+//                if (env.INSTANCE_ID) {
+//                    // Terminate the EC2 instance using a method or shared library
+//                    terminateEc2Instance(env.INSTANCE_ID)
+//                }
+//            }
+//        }
+//    }
+//}
+def launchEc2Instance(String templateId, String label) {
+    // Construct the command and capture output directly
+    def command = """
+        aws ec2 run-instances \
+        --launch-template LaunchTemplateId=${templateId},Version=2 \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=jenkins-${label}},{Key=jenkins-label,Value=${label}}]' \
+        --query 'Instances[0].InstanceId' \
+        --output text
+    """
+
+    // Execute and capture output
+    def instanceId = sh(script: command, returnStdout: true).trim()
+    echo "EC2 instance launched with ID: ${instanceId}"
+
+    return instanceId
 }
