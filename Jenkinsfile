@@ -14,6 +14,9 @@ pipeline {
             steps {
                 script {
                     env.SLAVE_LABEL = "agent-${BUILD_NUMBER}"
+                    // Ensure scripts are executable
+                    sh 'chmod +x ./jenkins/launch_slave_from_template.sh'
+                    sh 'chmod +x ./jenkins/terminate_slave.sh'
                     sh "./jenkins/launch_slave_from_template.sh ${env.SLAVE_LABEL}"
                     env.INSTANCE_ID = readFile('slave_instance_id.txt').trim()
 
