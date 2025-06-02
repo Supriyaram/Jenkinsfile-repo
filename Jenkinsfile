@@ -1,3 +1,4 @@
+@Library('DumbSlave-SSH _launcher') 
 pipeline {
 
 
