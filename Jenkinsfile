@@ -17,9 +17,10 @@ pipeline {
                     // Ensure scripts are executable
                     sh 'chmod +x ./jenkins/launch_slave_from_template.sh'
                     sh 'chmod +x ./jenkins/terminate_slave.sh'
+
+                    // Run the script to launch EC2
                     sh "./jenkins/launch_slave_from_template.sh ${env.SLAVE_LABEL}"
                     env.INSTANCE_ID = readFile('slave_instance_id.txt').trim()
-
                     timeout(time: 3, unit: 'MINUTES') {
                         waitUntil {
                             nodeExists(env.SLAVE_LABEL)
