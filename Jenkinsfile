@@ -1,13 +1,13 @@
 pipeline {
     agent any
     parameters {
-        choice(name: 'REPO_SELECTION', choices: ['repo1', 'repo2', 'repo3'], description: 'Choose repo')
+        choice(name: 'REPO_SELECTION', choices: ['patient-management', 'schedule-management'], description: 'Choose repo')
         string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Enter branch')
     }
     environment {
-        REPO1_URL = 'https://github.com/example/repo1.git'
-        REPO2_URL = 'https://github.com/example/repo2.git'
-        REPO3_URL = 'https://github.com/example/repo3.git'
+        REPO1_URL = 'https://github.com/Supriyaram/patient-management.git'
+        REPO2_URL = 'https://github.com/Supriyaram/schedule-management.git'
+        
     }
     stages {
         stage('Checkout') {
@@ -27,7 +27,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh './mvnw clean verify'
+                sh './mvn clean verify'
             }
         }
     }
