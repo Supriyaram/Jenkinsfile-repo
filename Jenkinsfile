@@ -28,7 +28,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn --version'
-                sh './mvnw clean verify'
+                sh 'mvn clean verify'
             }
         }
     }
