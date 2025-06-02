@@ -1,7 +1,6 @@
 @Library('DumbSlave-SSH _launcher') 
-pipeline {
-
-
+pipeline 
+{
     parameters {
         choice(name: 'REPO_SELECTION', choices: ['patient-management', 'schedule-management'], description: 'Choose the repo')
         string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to checkout')
