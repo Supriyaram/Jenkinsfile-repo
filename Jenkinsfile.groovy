@@ -77,17 +77,17 @@ pipeline {
                         steps {
                                 sh '''
                                         aws --version
-//                                    if ! command -v aws &> /dev/null; then
-//                                        echo "Installing AWS CLI..."
-//                                        sudo apt-get update -y
-//                                        sudo apt-get install -y unzip curl
-//                                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-//                                        unzip -q awscliv2.zip
-//                                        sudo ./aws/install --update
-//                                        echo "AWS CLI installed at: $(which aws)"
-//                                    else
-//                                        echo "AWS CLI already installed: $(which aws)"
-//                                    fi
+                                    if ! command -v aws &> /dev/null; then
+                                        echo "Installing AWS CLI..."
+                                        sudo apt-get update -y
+                                        sudo apt-get install -y unzip curl
+                                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                                        unzip -q awscliv2.zip
+                                        sudo ./aws/install --update
+                                        echo "AWS CLI installed at: $(which aws)"
+                                    else
+                                        echo "AWS CLI already installed: $(which aws)"
+                                    fi
                                 '''
                         }
                 }
