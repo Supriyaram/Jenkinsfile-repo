@@ -58,8 +58,10 @@ pipeline {
             agent { label "${env.SLAVE_LABEL}" }
             steps {
                 script {
-                    sh 'which mvn && mvn -version'
-                }
+                    def mvnHome = tool name: 'Maven 3', type: 'maven'
+                    withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
+                    sh 'mvn clean verify'
+                 }
             }
         }
     }
