@@ -77,9 +77,12 @@ pipeline {
                 }
                 stage('Docker Build') {
                         steps {
-                                env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
-                                echo "Using image: ${env.IMAGE_NAME}"
-                                sh ' docker build -t ${env.IMAGE_NAME } .'
+                                script{
+                                        env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
+                                        echo "Using image: ${env.IMAGE_NAME}"
+                                        sh ' docker build -t ${env.IMAGE_NAME } .'
+                                }
+
                         }
                 }
         }
