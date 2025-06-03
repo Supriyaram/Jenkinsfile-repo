@@ -1,6 +1,8 @@
-@Library('DumbSlave-SSH _launcher')
- pipeline
-{
+@Library('dumbslave-lib') _
+
+pipeline {
+    agent any
+
     parameters {
         choice(name: 'REPO_SELECTION', choices: ['patient-management', 'schedule-management'], description: 'Choose the repo')
         string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Branch to checkout')
@@ -12,107 +14,81 @@
     }
 
     stages {
-        stage('Provision EC2 Slave') {
+        stage('Provision EC2 & Register Agent') {
             steps {
                 script {
-                    env.SLAVE_LABEL = "agent-${BUILD_NUMBER}"
-                    env.INSTANCE_ID = launchEc2Instance(env.SLAVE_LABEL)
+                    def label = "agent-${env.BUILD_NUMBER}"
+                    def instanceId = launchEc2Instance(label)
 
-                    // Wait until EC2 is running
-                    waitUntil {
-                        sh(script: """
-                             aws ec2 describe-instances --instance-ids ${env.INSTANCE_ID} \
-                             --query "Reservations[0].Instances[0].State.Name" --output text
-                            """, returnStdout: true).trim() == "running"
-                    }
+                    echo "Waiting for instance ${instanceId} to be in 'running' state..."
 
-                    // Get private IP
+                    sh "aws ec2 wait instance-status-ok --instance-ids ${instanceId}"
+
                     def privateIP = sh(script: """
-                            aws ec2 describe-instances --instance-ids ${env.INSTANCE_ID} \
-                            --query "Reservations[0].Instances[0].PrivateIpAddress" --output text
-                            """, returnStdout: true).trim()
+                        aws ec2 describe-instances --instance-ids ${instanceId} \
+                        --query "Reservations[0].Instances[0].PrivateIpAddress" --output text
+                    """, returnStdout: true).trim()
 
-                                    sh "aws ec2 wait instance-status-ok --instance-ids ${env.INSTANCE_ID}"
+                    // Save instance ID and label to env for future stages
+                    env.SLAVE_LABEL = label
+                    env.INSTANCE_ID = instanceId
 
-
-                    // Register EC2 instance as Jenkins agent using private IP
-                    def node = new DumbSlave(
-                            env.SLAVE_LABEL, "/home/ubuntu/jenkins",
-                            new SSHLauncher(privateIP, 22, 'jenkins-ssh-key')
-                    )
-                    node.setLabelString(env.SLAVE_LABEL)
-                    Jenkins.instance.addNode(node)
-
-                    // Wait until the agent is online
-                    waitUntil {
-                        Jenkins.instance.getNode(env.SLAVE_LABEL)?.toComputer()?.isOnline()
-                    }
-
-                    echo "Agent ${env.SLAVE_LABEL} is ready using private IP: ${privateIP}"
+                    registerEc2Agent(label, privateIP, 'jenkins-ssh-key')
                 }
             }
         }
 
-
-        stage('Run on EC2 Agent') {
+        stage('Check out on EC2 Agent') {
             agent { label "${env.SLAVE_LABEL}" }
             steps {
                 script {
-                    // Choose the correct repo URL based on parameter
                     def repoUrl = (params.REPO_SELECTION == 'patient-management') ? env.REPO1_URL : env.REPO2_URL
 
                     echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
-
-                    // Checkout the repository
                     checkout([
-                            $class           : 'GitSCM',
-                            branches         : [[name: "*/${params.BRANCH_NAME}"]],
+                            $class: 'GitSCM',
+                            branches: [[name: "*/${params.BRANCH_NAME}"]],
                             userRemoteConfigs: [[url: repoUrl]]
                     ])
                 }
             }
         }
 
-
         stage('Build & Test') {
+            agent { label "${env.SLAVE_LABEL}" }
             steps {
                 script {
-                    // You may use withMaven if you have the Maven plugin
                     def mvnHome = tool name: 'Maven 3', type: 'maven'
                     withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-                        sh 'mvn clean verify' // use `bat` on Windows agents or `sh` only if necessary
+                        sh 'mvn clean verify'
                     }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if (env.INSTANCE_ID) {
+                    echo "Terminating instance ${env.INSTANCE_ID}"
+                    terminateEc2Instance(env.INSTANCE_ID)
                 }
             }
         }
     }
 }
 
-
-//    post {
-//        always {
-//            script {
-//                if (env.INSTANCE_ID) {
-//                    // Terminate the EC2 instance using a method or shared library
-//                    terminateEc2Instance(env.INSTANCE_ID)
-//                }
-//            }
-//        }
-//    }
-//}
-def launchEc2Instance(String templateId, String label) {
-    // Construct the command and capture output directly
+// This function should ideally live in the shared library, not in the Jenkinsfile
+def launchEc2Instance(String label) {
+    def templateId = "lt-026fe4def668209ae" // Replace with actual Launch Template ID
     def command = """
         aws ec2 run-instances \
-        --launch-template LaunchTemplateId=${templateId},Version=2 \
+        --launch-template LaunchTemplateId=${templateId} \
         --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=jenkins-${label}},{Key=jenkins-label,Value=${label}}]' \
         --query 'Instances[0].InstanceId' \
         --output text
     """
 
-    // Execute and capture output
-    def instanceId = sh(script: command, returnStdout: true).trim()
-    echo "EC2 instance launched with ID: ${instanceId}"
-
-    return instanceId
+    return sh(script: command, returnStdout: true).trim()
 }
