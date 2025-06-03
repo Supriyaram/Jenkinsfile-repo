@@ -1,7 +1,7 @@
 @Library('dumbslave-lib') _
 
 pipeline {
-    agent any
+     agent { label 'built-in' }
 
     parameters {
         choice(name: 'REPO_SELECTION', choices: ['patient-management', 'schedule-management'], description: 'Choose the repo')
