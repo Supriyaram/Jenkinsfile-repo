@@ -43,8 +43,10 @@ pipeline {
             steps {
                 script {
                     def repoUrl = (params.REPO_SELECTION == 'patient-management') ? env.REPO1_URL : env.REPO2_URL
-
                     echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
+
+                    // Clean workspace before new checkout
+                    deleteDir()
                     checkout([
                             $class           : 'GitSCM',
                             branches         : [[name: "*/${params.BRANCH_NAME}"]],
