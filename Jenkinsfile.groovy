@@ -47,6 +47,7 @@ pipeline {
 
                     // Clean workspace before new checkout
                     deleteDir()
+                    //ensures app-repo is checking out inside 'app' dir
                     dir('app'){
                     checkout([
                             $class           : 'GitSCM',
@@ -62,6 +63,7 @@ pipeline {
             agent { label "${env.SLAVE_LABEL}" }
             steps {
                 script {
+                    //same app-repo must be used here since its different stage, workspace from previous will be refreshed
                     dir('app'){
                     def mvnHome = tool name: 'Maven3', type: 'maven'
                     withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
