@@ -76,14 +76,13 @@ pipeline {
                         }
                 }
                 stage('Docker Build') {
+                        agent { label "${env.SLAVE_LABEL}" }
                         steps {
                                 script{
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
                                         echo "Using image: ${env.IMAGE_NAME}"
-                                       sh 'mvn --version'
-                                        sh 'java --version'
+                                        sh " docker build -t ${env.IMAGE_NAME } ."
 
-//                                        sh " docker build -t ${env.IMAGE_NAME } ."
                                 }
 
                         }
