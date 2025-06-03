@@ -48,7 +48,7 @@ pipeline {
                                         // Clean workspace before new checkout
                                         deleteDir()
                                         //ensures app-repo is checking out inside 'app' dir
-                                        dir('app'){
+                                        dir('app') {
                                                 checkout([
                                                         $class           : 'GitSCM',
                                                         branches         : [[name: "*/${params.BRANCH_NAME}"]],
@@ -65,7 +65,7 @@ pipeline {
                         steps {
                                 script {
                                         //same app-repo must be used here since its different stage, workspace from previous will be refreshed
-                                        dir('app'){
+                                        dir('app') {
                                                 unstash 'app-code'
                                                 def mvnHome = tool name: 'Maven3', type: 'maven'
                                                 withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
@@ -82,59 +82,20 @@ pipeline {
                 }
         }
 
-        stage('Check out on EC2 Agent') {
-            agent { label "${env.SLAVE_LABEL}" }
-            steps {
-                script {
-                    def repoUrl = (params.REPO_SELECTION == 'patient-management') ? env.REPO1_URL : env.REPO2_URL
-                    echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
-
-                    // Clean workspace before new checkout
-                    deleteDir()
-                    //ensures app-repo is checking out inside 'app' dir
-                    dir('app'){
-                        checkout([
-                                $class           : 'GitSCM',
-                                branches         : [[name: "*/${params.BRANCH_NAME}"]],
-                                userRemoteConfigs: [[url: repoUrl]]
-                        ])
-                        stash name: 'app-code'
+        post {
+                always {
+                        script {
+                                if (env.INSTANCE_ID) {
+                                        echo "Terminating instance ${env.INSTANCE_ID}"
+                                        terminateEc2Instance(env.INSTANCE_ID)
+                                }
+                        }
                 }
-              }
-            }
         }
-
-        stage('Build & Test') {
-            agent { label "${env.SLAVE_LABEL}" }
-            steps {
-                script {
-                    //same app-repo must be used here since its different stage, workspace from previous will be refreshed
-                    dir('app'){
-                        unstash 'app-code'
-                        def mvnHome = tool name: 'Maven3', type: 'maven'
-                        withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-                            sh 'mvn clean verify'
-                    }
-                }
-              }
-            }
-        }
-    }
-
-    post {
-        always {
-            script {
-                if (env.INSTANCE_ID) {
-                    echo "Terminating instance ${env.INSTANCE_ID}"
-                    terminateEc2Instance(env.INSTANCE_ID)
-                }
-            }
-        }
-    }
-
+}
 
 // This function should ideally live in the shared library, not in the Jenkinsfile
-    def launchEc2Instance(String label) {
+ def launchEc2Instance(String label) {
         def templateId = "lt-026fe4def668209ae" // Replace with actual Launch Template ID
         def command = """
         aws ec2 run-instances \
