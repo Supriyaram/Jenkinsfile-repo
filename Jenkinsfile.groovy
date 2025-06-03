@@ -47,12 +47,14 @@ pipeline {
 
                     // Clean workspace before new checkout
                     deleteDir()
+                    dir('app'){
                     checkout([
                             $class           : 'GitSCM',
                             branches         : [[name: "*/${params.BRANCH_NAME}"]],
                             userRemoteConfigs: [[url: repoUrl]]
                     ])
                 }
+              }
             }
         }
 
@@ -60,11 +62,13 @@ pipeline {
             agent { label "${env.SLAVE_LABEL}" }
             steps {
                 script {
+                    dir('app'){
                     def mvnHome = tool name: 'Maven3', type: 'maven'
                     withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
                         sh 'mvn clean verify'
                     }
                 }
+              }
             }
         }
     }
