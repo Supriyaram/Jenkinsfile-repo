@@ -10,6 +10,7 @@ pipeline {
         environment {
                 REPO1_URL = 'https://github.com/Supriyaram/patient-management.git'
                 REPO2_URL = 'https://github.com/Supriyaram/schedule-management.git'
+                ECR_URL = '203918864735.dkr.ecr.us-east-1.amazonaws.com'
 
         }
 
@@ -79,9 +80,10 @@ pipeline {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
                                 script{
-                                        env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
-                                        echo "Using image: ${env.IMAGE_NAME}"
-                                        sh " docker build -t ${env.IMAGE_NAME } ."
+                                        sh 'ls -al && pwd'
+//                                        env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
+//                                        echo "Using image: ${env.IMAGE_NAME}"
+//                                        sh " docker build -t ${env.IMAGE_NAME } ."
 
                                 }
 
