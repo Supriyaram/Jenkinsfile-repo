@@ -58,7 +58,7 @@ pipeline {
             agent { label "${env.SLAVE_LABEL}" }
             steps {
                 script {
-                   
+                    def mvnHome = tool name: 'Maven 3', type: 'maven'
                     withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
                         sh 'mvn clean verify'
                     }
@@ -67,16 +67,16 @@ pipeline {
         }
     }
 
-    // post {
-    //     always {
-    //         script {
-    //             if (env.INSTANCE_ID) {
-    //                 echo "Terminating instance ${env.INSTANCE_ID}"
-    //                 terminateEc2Instance(env.INSTANCE_ID)
-    //             }
-    //         }
-    //     }
-    // }
+    post {
+        always {
+            script {
+                if (env.INSTANCE_ID) {
+                    echo "Terminating instance ${env.INSTANCE_ID}"
+                    terminateEc2Instance(env.INSTANCE_ID)
+                }
+            }
+        }
+    }
 }
 
 // This function should ideally live in the shared library, not in the Jenkinsfile
