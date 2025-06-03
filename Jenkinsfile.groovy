@@ -67,6 +67,7 @@ pipeline {
                                 script {
                                         //same app-repo must be used here since its different stage, workspace from previous will be refreshed
                                         dir('app') {
+                                                sh 'ls -al && pwd'
                                                 unstash 'app-code'
                                                 sh 'ls -al && pwd'
                                                 def mvnHome = tool name: 'Maven3', type: 'maven'
