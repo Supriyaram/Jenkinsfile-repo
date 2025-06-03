@@ -83,6 +83,14 @@ pipeline {
                                         echo "Using image: ${env.IMAGE_NAME}"
                                         sh " docker build -t ${env.IMAGE_NAME } ."
                                         sh  "docker tag ${env.IMAGE_NAME} 203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}:latest"
+                                        withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                                                sh '''
+                                                         export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                                                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                                                        aws ecr get-login-password --region us-east-1 | \
+                                                         docker login --username AWS --password-stdin 203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo
+                                                '''
+                                        }
 
                                 }
 
