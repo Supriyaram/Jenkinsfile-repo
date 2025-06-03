@@ -73,11 +73,30 @@ pipeline {
                                                 }
                                 }
                         }
+                stage('Install AWS CLI') {
+                        steps {
+                                        sh '''
+                                            if ! command -v aws &> /dev/null; then
+                                                echo "Installing AWS CLI..."
+                                                apt-get update -y
+                                                apt-get install -y unzip curl
+                                                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                                                unzip -q awscliv2.zip
+                                                ./aws/install --update
+                                                echo "AWS CLI installed at: $(which aws)"
+                                            else
+                                                echo "AWS CLI already installed: $(which aws)"
+                                            fi
+                                        '''
+                                }
+                        }
+
                 }
                 stage('Docker Build') {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
                                 script{
+                                        def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
                                         sh 'ls -al && pwd'
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"
                                         echo "Using image: ${env.IMAGE_NAME}"
@@ -86,9 +105,9 @@ pipeline {
                                         withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                                                 sh '''
                                                          export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                                                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                                                        aws ecr get-login-password --region us-east-1 | \
-                                                         docker login --username AWS --password-stdin 203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo
+                                                         export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                                                         aws ecr get-login-password --region us-east-1 | \
+                                                        docker login --username AWS --password-stdin ${repoUrl}
                                                 '''
                                         }
 
