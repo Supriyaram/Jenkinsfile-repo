@@ -101,7 +101,7 @@ pipeline {
         }
 }
 
-// This function should ideally live in the shared library, not in the Jenkinsfile
+
  def launchEc2Instance(String label) {
         def templateId = "lt-026fe4def668209ae" // Replace with actual Launch Template ID
         def command = """
