@@ -82,6 +82,7 @@ pipeline {
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
                                         echo "Using image: ${env.IMAGE_NAME}"
                                         sh " docker build -t ${env.IMAGE_NAME } ."
+                                        sh  "docker tag ${env.IMAGE_NAME} 203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}:latest"
 
                                 }
 
