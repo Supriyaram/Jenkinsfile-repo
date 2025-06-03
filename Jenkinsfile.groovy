@@ -10,7 +10,6 @@ pipeline {
         environment {
                 REPO1_URL = 'https://github.com/Supriyaram/patient-management.git'
                 REPO2_URL = 'https://github.com/Supriyaram/schedule-management.git'
-                ECR_URL = '203918864735.dkr.ecr.us-east-1.amazonaws.com'
 
         }
 
@@ -92,6 +91,7 @@ pipeline {
                         }
 
                 }
+
                 stage('Docker Build') {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
