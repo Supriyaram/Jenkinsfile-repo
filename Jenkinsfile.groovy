@@ -46,8 +46,8 @@ pipeline {
 
                     echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
                     checkout([
-                            $class: 'GitSCM',
-                            branches: [[name: "*/${params.BRANCH_NAME}"]],
+                            $class           : 'GitSCM',
+                            branches         : [[name: "*/${params.BRANCH_NAME}"]],
                             userRemoteConfigs: [[url: repoUrl]]
                     ])
                 }
@@ -60,29 +60,29 @@ pipeline {
                 script {
                     def mvnHome = tool name: 'Maven 3', type: 'maven'
                     withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-                    sh 'mvn clean verify'
-                 }
+                        sh 'mvn clean verify'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if (env.INSTANCE_ID) {
+                    echo "Terminating instance ${env.INSTANCE_ID}"
+                    terminateEc2Instance(env.INSTANCE_ID)
+                }
             }
         }
     }
 }
-
-post {
-    always {
-        script {
-            if (env.INSTANCE_ID) {
-                echo "Terminating instance ${env.INSTANCE_ID}"
-                terminateEc2Instance(env.INSTANCE_ID)
-            }
-        }
-    }
-}
-
 
 // This function should ideally live in the shared library, not in the Jenkinsfile
-def launchEc2Instance(String label) {
-    def templateId = "lt-026fe4def668209ae" // Replace with actual Launch Template ID
-    def command = """
+    def launchEc2Instance(String label) {
+        def templateId = "lt-026fe4def668209ae" // Replace with actual Launch Template ID
+        def command = """
         aws ec2 run-instances \
         --launch-template LaunchTemplateId=${templateId} \
         --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=jenkins-${label}},{Key=jenkins-label,Value=${label}}]' \
@@ -90,5 +90,5 @@ def launchEc2Instance(String label) {
         --output text
     """
 
-    return sh(script: command, returnStdout: true).trim()
-}
+        return sh(script: command, returnStdout: true).trim()
+    }
