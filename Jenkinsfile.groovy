@@ -79,9 +79,9 @@ pipeline {
                         steps {
                                 script{
                                         sh 'ls -al && pwd'
-//                                        env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
-//                                        echo "Using image: ${env.IMAGE_NAME}"
-//                                        sh " docker build -t ${env.IMAGE_NAME } ."
+                                        env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
+                                        echo "Using image: ${env.IMAGE_NAME}"
+                                        sh " docker build -t ${env.IMAGE_NAME } ."
 
                                 }
 
