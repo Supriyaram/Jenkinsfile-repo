@@ -99,6 +99,11 @@ pipeline {
         --query 'Instances[0].InstanceId' \
         --output text
     """
-
         return sh(script: command, returnStdout: true).trim()
     }
+    def terminateEc2Instance(String instanceId) {
+        sh """
+            aws ec2 terminate-instances --instance-ids ${instanceId}
+        """
+    }
+
