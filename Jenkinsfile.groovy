@@ -10,7 +10,7 @@ pipeline {
         environment {
                 REPO1_URL = 'https://github.com/Supriyaram/patient-management.git'
                 REPO2_URL = 'https://github.com/Supriyaram/schedule-management.git'
-                IMAGE_NAME = params.REPO_SELECTION
+
         }
 
         stages {
@@ -77,7 +77,9 @@ pipeline {
                 }
                 stage('Docker Build') {
                         steps {
-                                sh ' docker build -t $IMAGE_NAME .'
+                                env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
+                                echo "Using image: ${env.IMAGE_NAME}"
+                                sh ' docker build -t ${env.IMAGE_NAME } .'
                         }
                 }
         }
