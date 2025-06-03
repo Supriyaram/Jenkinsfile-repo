@@ -58,7 +58,7 @@ pipeline {
             agent { label "${env.SLAVE_LABEL}" }
             steps {
                 script {
-                    def mvnHome = tool name: 'Maven 3', type: 'maven'
+                    def mvnHome = tool name: 'Maven3', type: 'maven'
                     withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
                         sh 'mvn clean verify'
                     }
