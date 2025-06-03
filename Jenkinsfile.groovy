@@ -80,7 +80,9 @@ pipeline {
                                 script{
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"+ ":latest"
                                         echo "Using image: ${env.IMAGE_NAME}"
-                                        sh 'which docker || docker --version'
+                                        sh "docker --version"
+                                        sh 'java --version'
+                                        sh 'mvn --version'
 
 //                                        sh " docker build -t ${env.IMAGE_NAME } ."
                                 }
