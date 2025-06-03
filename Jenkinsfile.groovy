@@ -49,11 +49,12 @@ pipeline {
                     deleteDir()
                     //ensures app-repo is checking out inside 'app' dir
                     dir('app'){
-                    checkout([
-                            $class           : 'GitSCM',
-                            branches         : [[name: "*/${params.BRANCH_NAME}"]],
-                            userRemoteConfigs: [[url: repoUrl]]
-                    ])
+                        checkout([
+                                $class           : 'GitSCM',
+                                branches         : [[name: "*/${params.BRANCH_NAME}"]],
+                                userRemoteConfigs: [[url: repoUrl]]
+                        ])
+                        stash name: 'app-code'
                 }
               }
             }
@@ -65,9 +66,10 @@ pipeline {
                 script {
                     //same app-repo must be used here since its different stage, workspace from previous will be refreshed
                     dir('app'){
-                    def mvnHome = tool name: 'Maven3', type: 'maven'
-                    withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
-                        sh 'mvn clean verify'
+                        unstash 'app-code'
+                        def mvnHome = tool name: 'Maven3', type: 'maven'
+                        withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
+                            sh 'mvn clean verify'
                     }
                 }
               }
