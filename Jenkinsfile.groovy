@@ -59,23 +59,23 @@ pipeline {
             steps {
                 script {
                     sh 'which mvn && mvn -version'
-                    }
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            script {
-                if (env.INSTANCE_ID) {
-                    echo "Terminating instance ${env.INSTANCE_ID}"
-                    terminateEc2Instance(env.INSTANCE_ID)
                 }
             }
         }
     }
 }
+
+post {
+    always {
+        script {
+            if (env.INSTANCE_ID) {
+                echo "Terminating instance ${env.INSTANCE_ID}"
+                terminateEc2Instance(env.INSTANCE_ID)
+            }
+        }
+    }
+}
+
 
 // This function should ideally live in the shared library, not in the Jenkinsfile
 def launchEc2Instance(String label) {
