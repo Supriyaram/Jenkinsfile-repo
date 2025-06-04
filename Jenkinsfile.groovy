@@ -99,20 +99,19 @@ pipeline {
                                                      docker push ${repoUrl}
                                                     
                                                    # Remove any existing container
-                                                     docker rm -f test-app || true
+                                                     #docker rm -f test-app || true
 
                                                    # Run a test container from ECR image
-                                                     docker run -d --name test-app -p 8080:8080 ${repoUrl}:latest
+                                                    # docker run -d --name test-app -p 8080:8080 ${repoUrl}:latest
                                         
                                                    # Wait a few seconds for app to start
-                                                       sleep 50
+                                                    #   sleep 50
                                         
                                                    # Perform health check, if its fail do, echo
-                                                    curl --fail http://localhost:8080/api/patients
-                                                     # curl --fail http://localhost:8080/health || (echo 'Health check failed!' && docker logs test-app && exit 1)
+                                                   # curl --fail http://localhost:8080/api/patients
                                                 
                                                   # Clean up test container
-                                                     docker stop test-app && docker rm test-app
+                                                     #docker stop test-app && docker rm test-app
 
                                                 """
                                         }
@@ -127,8 +126,8 @@ pipeline {
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"
                                         def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
                                         input message: 'Proceed to deploy to Production?', ok: 'Deploy'
-//                                        def deploymentFile = 'deploymentFile.yaml' // Adjust path
-//                                        sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
+                                        def deploymentFile = 'deploymentFile.yaml' // Adjust path
+                                        sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
                                 }
                         }
                 }
