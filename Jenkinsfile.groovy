@@ -142,7 +142,6 @@ pipeline {
                                                     export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                                 
                                                     export IMAGE=${env.ECR_IMAGE}
-                                                    echo ${deploymentFile}
                                                     envsubst < ${deploymentFile} > rendered.yaml
                                                     cat rendered.yaml
                                 
