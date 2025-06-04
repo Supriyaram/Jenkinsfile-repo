@@ -144,6 +144,9 @@ pipeline {
                                             """
 
                                         // Apply the rendered deployment file to the Kubernetes cluster
+                                        sh 'kubectl --version'
+                                        sh 'kubectl config current-context'
+                                        sh "cat rendered.yaml"
                                         sh 'kubectl apply -f rendered.yaml'
                                 }
                         }
