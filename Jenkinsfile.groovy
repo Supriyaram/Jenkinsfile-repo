@@ -84,26 +84,35 @@ pipeline {
                 stage('Docker Build') {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
-                                script{
-                                        def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
-                                        sh 'ls -al && pwd'
+                                script {
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"
+                                        def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
+
+                                        sh 'ls -al && pwd'
                                         echo "Using image: ${env.IMAGE_NAME}"
-                                        sh " docker build -t ${env.IMAGE_NAME } ."
-                                        sh  "docker tag ${env.IMAGE_NAME} 203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}:latest"
-                                        withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                                                sh '''
-                                                         export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                                                         export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                                                         aws ecr get-login-password --region us-east-1 | \
-                                                        docker login --username AWS --password-stdin ${repoUrl}
-                                                '''
+
+                                        // Build the Docker image
+                                        sh "docker build -t ${env.IMAGE_NAME} ."
+
+                                        // Tag the image for ECR
+                                        sh "docker tag ${env.IMAGE_NAME} ${repoUrl}:latest"
+
+                                        // Use AWS credentials securely
+                                        withCredentials([
+                                                usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')
+                                        ]) {
+                                                sh """
+                                                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                                                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                                
+                                                    aws ecr get-login-password --region us-east-1 | \
+                                                    docker login --username AWS --password-stdin ${repoUrl}
+                                                """
                                         }
-
                                 }
-
                         }
                 }
+
         }
 
         post {
