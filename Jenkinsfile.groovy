@@ -144,13 +144,21 @@ pipeline {
                                                 echo ${deploymentFile}
                                                 envsubst < ${deploymentFile} > rendered.yaml
                                                  cat rendered.yaml
+                                                 # Configure kubeconfig to access EKS
+                                                aws eks update-kubeconfig --region us-east-1 --name fleetman-eks-cluster
+                                        
+                                                # Confirm access
+                                                kubectl get nodes
+                                        
+                                                # Now apply the deployment
+                                                kubectl apply -f rendered.yaml
                                             """
 
-                                        // Apply the rendered deployment file to the Kubernetes cluster
-                                        sh 'which kubectl'
-                                        sh 'kubectl version --client=true'
-                                        sh "cat rendered.yaml"
-                                        sh 'kubectl apply -f rendered.yaml'
+//                                        // Apply the rendered deployment file to the Kubernetes cluster
+//                                        sh 'which kubectl'
+//                                        sh 'kubectl version --client=true'
+//                                        sh "cat rendered.yaml"
+//                                        sh 'kubectl apply -f rendered.yaml'
                                 }
                         }
                 }
