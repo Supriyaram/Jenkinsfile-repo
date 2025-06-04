@@ -141,7 +141,9 @@ pipeline {
                                         sh """
                                                 # env.ECR_IMAGE is substituted in IMAGE place in yaml file
                                                 export IMAGE=${env.ECR_IMAGE}
+                                                cat deploymentFile.yaml
                                                 envsubst < ${deploymentFile} > rendered.yaml
+                                                 cat rendered.yml
                                             """
 
                                         // Apply the rendered deployment file to the Kubernetes cluster
