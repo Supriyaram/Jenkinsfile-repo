@@ -105,7 +105,7 @@ pipeline {
                                                      docker run -d --name test-app -p 8080:8080 ${repoUrl}:latest
                                         
                                                    # Wait a few seconds for app to start
-                                                       sleep 10
+                                                       sleep 50
                                         
                                                    # Perform health check (adjust URL/port based on your app)
                                                       curl --fail http://localhost:8080/health || (echo 'Health check failed!' && docker logs test-app && exit 1)
