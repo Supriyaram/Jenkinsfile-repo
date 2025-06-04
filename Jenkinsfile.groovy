@@ -44,15 +44,11 @@ pipeline {
                                 script {
                                         def repoUrl = (params.REPO_SELECTION == 'patient-management') ? env.REPO1_URL : env.REPO2_URL
                                         echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
-
-                                        // Clean workspace before new checkout
-                                        deleteDir()
-                                        //ensures app-repo is checking out inside 'app' dir
-                                                checkout([
+                                       checkout([
                                                         $class           : 'GitSCM',
                                                         branches         : [[name: "*/${params.BRANCH_NAME}"]],
                                                         userRemoteConfigs: [[url: repoUrl]]
-                                                ])
+                                       ])
                                                 stash name: 'app-code'
                                 }
                         }
@@ -62,10 +58,7 @@ pipeline {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
                                 script {
-                                        //same app-repo must be used here since its different stage, workspace from previous will be refreshed
-                                        sh 'ls -al && pwd'
                                         unstash 'app-code'
-                                        sh 'ls -al && pwd'
                                         def mvnHome = tool name: 'Maven3', type: 'maven'
                                         withEnv(["PATH+MAVEN=${mvnHome}/bin"]) {
                                                 sh 'mvn clean verify'
@@ -73,14 +66,7 @@ pipeline {
                                 }
                         }
                 }
-                stage('Install AWS CLI') {
-                        steps {
-                                agent { label "${env.SLAVE_LABEL}" }
-                                sh '''
-                                        aws --version
-                                '''
-                        }
-                }
+
                 stage('Docker Build') {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
@@ -103,29 +89,29 @@ pipeline {
                                                     export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                                                     export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                                                       
-                                                    // generates a temporary authentication token (password) for ECR valid for 12 hours, 
+                                                    # generates a temporary authentication token (password) for ECR valid for 12 hours, 
                                                     aws ecr get-login-password --region us-east-1 | \
 
-                                                    // Tells Docker to read the password from stdin
+                                                    # Tells Docker to read the password from stdin
                                                     docker login --username AWS --password-stdin ${repoUrl}
 
-                                                     // pushes docker image
+                                                     # pushes docker image
                                                      docker push ${repoUrl}
                                                     
                                                    # Remove any existing container
                                                      docker rm -f test-app || true
 
-                                                # Run a test container from ECR image
-                                                docker run -d --name test-app -p 8080:8080 ${repoUrl}:latest
+                                                   # Run a test container from ECR image
+                                                     docker run -d --name test-app -p 8080:8080 ${repoUrl}:latest
                                         
-                                                # Wait a few seconds for app to start
-                                                sleep 10
+                                                   # Wait a few seconds for app to start
+                                                       sleep 10
                                         
-                                                # Perform health check (adjust URL/port based on your app)
-                                                curl --fail http://localhost:8080/health || (echo 'Health check failed!' && docker logs test-app && exit 1)
+                                                   # Perform health check (adjust URL/port based on your app)
+                                                      curl --fail http://localhost:8080/health || (echo 'Health check failed!' && docker logs test-app && exit 1)
                                         
-                                                # Clean up test container
-                                                docker stop test-app && docker rm test-app
+                                                  # Clean up test container
+                                                     docker stop test-app && docker rm test-app
 
                                                 """
                                         }
