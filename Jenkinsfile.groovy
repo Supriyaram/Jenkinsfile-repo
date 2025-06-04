@@ -139,13 +139,14 @@ pipeline {
 
                                         // Replace ${IMAGE} placeholder in deployment YAML using envsubst and save to rendered.yaml
                                         sh """
+                                                # env.ECR_IMAGE is substituted in IMAGE place in yaml file
                                                 export IMAGE=${env.ECR_IMAGE}
                                                 envsubst < ${deploymentFile} > rendered.yaml
                                             """
 
                                         // Apply the rendered deployment file to the Kubernetes cluster
-                                        sh 'kubectl --version'
-                                        sh 'kubectl config current-context'
+                                        sh 'which kubectl'
+                                        sh 'kubectl version --client=true'
                                         sh "cat rendered.yaml"
                                         sh 'kubectl apply -f rendered.yaml'
                                 }
