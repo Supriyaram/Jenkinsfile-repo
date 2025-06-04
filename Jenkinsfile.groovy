@@ -123,45 +123,43 @@ pipeline {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
                                 script {
-                                        // Set image name based on the selected repo (e.g., patient-management or schedule-management)
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"
-
-                                        // Construct the full ECR image repository URL
                                         def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
                                         def deploymentFile = 'deploymentFile.yaml'
-
-                                        // Define the full image reference with tag `latest`
                                         env.ECR_IMAGE = "${repoUrl}:latest"
 
-
-                                        // Prompt user for confirmation before deploying to production
                                         input message: 'Proceed to deploy to Production?', ok: 'Deploy'
 
-                                        // Replace ${IMAGE} placeholder in deployment YAML using envsubst and save to rendered.yaml
-                                        sh """
-                                                # env.ECR_IMAGE is substituted in IMAGE place in yaml file(depolymentFile)
-                                                export IMAGE=${env.ECR_IMAGE}
-                                                echo ${deploymentFile}
-                                                envsubst < ${deploymentFile} > rendered.yaml
-                                                 cat rendered.yaml
-                                                 # Configure kubeconfig to access EKS
-                                                aws eks update-kubeconfig --region us-east-1 --name fleetman-eks-cluster
-                                        
-                                                # Confirm access
-                                                kubectl get nodes
-                                        
-                                                # Now apply the deployment
-                                                kubectl apply -f rendered.yaml
-                                            """
-
-//                                        // Apply the rendered deployment file to the Kubernetes cluster
-//                                        sh 'which kubectl'
-//                                        sh 'kubectl version --client=true'
-//                                        sh "cat rendered.yaml"
-//                                        sh 'kubectl apply -f rendered.yaml'
+                                        withCredentials([
+                                                usernamePassword(
+                                                        credentialsId: 'aws-creds',
+                                                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                                                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                                                )
+                                        ]) {
+                                                sh """
+                                                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                                                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                                
+                                                    export IMAGE=${env.ECR_IMAGE}
+                                                    echo ${deploymentFile}
+                                                    envsubst < ${deploymentFile} > rendered.yaml
+                                                    cat rendered.yaml
+                                
+                                                    # Configure kubeconfig
+                                                    aws eks update-kubeconfig --region us-east-1 --name fleetman-eks-cluster
+                                
+                                                    # Confirm access
+                                                    kubectl get nodes
+                                
+                                                    # Apply deployment
+                                                    kubectl apply -f rendered.yaml
+                                                """
+                                        }
                                 }
                         }
                 }
+
 
         }
 
