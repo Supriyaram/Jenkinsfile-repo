@@ -120,11 +120,13 @@ pipeline {
                 stage('Deploy to prod'){
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
-                                env.IMAGE_NAME = "${params.REPO_SELECTION}"
-                                def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
-                                input message: 'Proceed to deploy to Production?', ok: 'Deploy'
-                                def deploymentFile = 'deploymentFile.yaml' // Adjust path
-                                sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
+                                script {
+                                        env.IMAGE_NAME = "${params.REPO_SELECTION}"
+                                        def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
+                                        input message: 'Proceed to deploy to Production?', ok: 'Deploy'
+                                        def deploymentFile = 'deploymentFile.yaml' // Adjust path
+                                        sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
+                                }
                         }
                 }
         }
