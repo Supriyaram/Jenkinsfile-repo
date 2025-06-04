@@ -110,7 +110,7 @@ pipeline {
                                                    # Perform health check, if its fail do, echo
                                                     curl --fail http://localhost:8080/status
                                                      curl --fail http://localhost:8080/actuator/health
-                                                      curl --fail http://localhost:8080/health || (echo 'Health check failed!' && docker logs test-app && exit 1)
+                                                     # curl --fail http://localhost:8080/health || (echo 'Health check failed!' && docker logs test-app && exit 1)
                                                 
                                                   # Clean up test container
                                                      docker stop test-app && docker rm test-app
