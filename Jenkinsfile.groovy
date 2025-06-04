@@ -119,18 +119,36 @@ pipeline {
                         }
                 }
 
-                stage('Deploy to prod'){
+                stage('Deploy to prod') {
                         agent { label "${env.SLAVE_LABEL}" }
                         steps {
                                 script {
+                                        // Set image name based on the selected repo (e.g., patient-management or schedule-management)
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"
+
+                                        // Construct the full ECR image repository URL
                                         def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
+                                        def deploymentFile = 'deploymentFile.yaml'
+
+                                        // Define the full image reference with tag `latest`
+                                        env.ECR_IMAGE = "${repoUrl}:latest"
+
+
+                                        // Prompt user for confirmation before deploying to production
                                         input message: 'Proceed to deploy to Production?', ok: 'Deploy'
-                                        def deploymentFile = 'deploymentFile.yaml' // Adjust path
-                                        sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
+
+                                        // Replace ${IMAGE} placeholder in deployment YAML using envsubst and save to rendered.yaml
+                                        sh """
+                                                export IMAGE=${env.ECR_IMAGE}
+                                                envsubst < ${deploymentFile} > rendered.yaml
+                                            """
+
+                                        // Apply the rendered deployment file to the Kubernetes cluster
+                                        sh 'kubectl apply -f rendered.yaml'
                                 }
                         }
                 }
+
         }
 
         post {
