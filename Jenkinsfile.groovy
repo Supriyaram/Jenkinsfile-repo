@@ -139,9 +139,9 @@ pipeline {
 
                                         // Replace ${IMAGE} placeholder in deployment YAML using envsubst and save to rendered.yaml
                                         sh """
-                                                # env.ECR_IMAGE is substituted in IMAGE place in yaml file
+                                                # env.ECR_IMAGE is substituted in IMAGE place in yaml file(depolymentFile)
                                                 export IMAGE=${env.ECR_IMAGE}
-                                                cat deploymentFile.yaml
+                                                echo ${deploymentFile}
                                                 envsubst < ${deploymentFile} > rendered.yaml
                                                  cat rendered.yml
                                             """
