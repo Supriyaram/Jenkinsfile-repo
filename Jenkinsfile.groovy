@@ -87,8 +87,6 @@ pipeline {
                                 script {
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"
                                         def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
-
-                                        sh 'ls -al && pwd'
                                         echo "Using image: ${env.IMAGE_NAME}"
 
                                         // Build the Docker image
@@ -104,9 +102,14 @@ pipeline {
                                                 sh """
                                                     export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                                                     export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                                
+                                                      
+                                                    // generates a temporary authentication token (password) for ECR valid for 12 hours, 
                                                     aws ecr get-login-password --region us-east-1 | \
+
+                                                    // Tells Docker to read the password from stdin
                                                     docker login --username AWS --password-stdin ${repoUrl}
+
+                                                     // pushes docker image
                                                      docker push ${repoUrl}
                                                 """
                                         }
@@ -114,6 +117,16 @@ pipeline {
                         }
                 }
 
+                stage('Deploy to prod'){
+                        agent { label "${env.SLAVE_LABEL}" }
+                        steps {
+                                env.IMAGE_NAME = "${params.REPO_SELECTION}"
+                                def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
+                                input message: 'Proceed to deploy to Production?', ok: 'Deploy'
+                                def deploymentFile = 'deploymentFile.yaml' // Adjust path
+                                sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
+                        }
+                }
         }
 
         post {
