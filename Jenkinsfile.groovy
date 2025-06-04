@@ -96,7 +96,7 @@ pipeline {
                                                     docker login --username AWS --password-stdin ${repoUrl}
 
                                                      # pushes docker image
-                                                     docker push ${repoUrl}
+                                                     docker push ${repoUrl}:latest
                                                     
                                                    # Remove any existing container
                                                      #docker rm -f test-app || true
