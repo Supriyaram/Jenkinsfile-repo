@@ -111,6 +111,22 @@ pipeline {
 
                                                      // pushes docker image
                                                      docker push ${repoUrl}
+                                                    
+                                                   # Remove any existing container
+                                                     docker rm -f test-app || true
+
+                                                # Run a test container from ECR image
+                                                docker run -d --name test-app -p 8080:8080 ${repoUrl}:latest
+                                        
+                                                # Wait a few seconds for app to start
+                                                sleep 10
+                                        
+                                                # Perform health check (adjust URL/port based on your app)
+                                                curl --fail http://localhost:8080/health || (echo 'Health check failed!' && docker logs test-app && exit 1)
+                                        
+                                                # Clean up test container
+                                                docker stop test-app && docker rm test-app
+
                                                 """
                                         }
                                 }
@@ -124,8 +140,8 @@ pipeline {
                                         env.IMAGE_NAME = "${params.REPO_SELECTION}"
                                         def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
                                         input message: 'Proceed to deploy to Production?', ok: 'Deploy'
-                                        def deploymentFile = 'deploymentFile.yaml' // Adjust path
-                                        sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
+//                                        def deploymentFile = 'deploymentFile.yaml' // Adjust path
+//                                        sh "sed -i 's|IMAGE_PLACEHOLDER|${repoUrl}:latest|' ${deploymentFile}"
                                 }
                         }
                 }
