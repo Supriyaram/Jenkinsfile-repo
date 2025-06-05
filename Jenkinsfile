@@ -190,13 +190,18 @@ pipeline {
 
  def launchEc2Instance(String label) {
         def templateId = "lt-026fe4def668209ae" // Replace with actual Launch Template ID
+        withCredentials([
+                usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')
+        ]) {
+                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
         def command = """
-        aws ec2 run-instances \
-        --launch-template LaunchTemplateId=${templateId} \
-        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=jenkins-${label}},{Key=jenkins-label,Value=${label}}]' \
-        --query 'Instances[0].InstanceId' \
-        --output text
-    """
+                aws ec2 run-instances \
+                --launch-template LaunchTemplateId=${templateId} \
+                --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=jenkins-${label}},{Key=jenkins-label,Value=${label}}]' \
+                --query 'Instances[0].InstanceId' \
+                --output text
+            """
         return sh(script: command, returnStdout: true).trim()
 
 }
