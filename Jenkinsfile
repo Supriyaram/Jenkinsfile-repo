@@ -141,32 +141,22 @@ pipeline {
                                                 sh """
                                                     export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
                                                     export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                                
-                                                     # Prepare a folder for rendered files
-                                                          mkdir -p rendered
-                                                        
-                                                    echo "📦 Rendering and copying manifests from k8s-manifests/"
-                                                    for file in k8s-manifests/*.yaml; do
-                                                      filename=\$(basename "\$file")
+                                                    export IMAGE=${env.ECR_IMAGE}
+
+                                                    echo ${deploymentFile}
+                                                    envsubst < ${deploymentFile} > rendered.yamlAdd commentMore actions
+                                                    cat rendered.yaml                             
+
+                                                    # Configure kubeconfig
+                                                    aws eks update-kubeconfig --region us-east-1 --name fleetman-eks-cluster
                                                     
-                                                   if echo "\$filename" | grep -qi "deployment"; then
-                                                      echo "🔧 Rendering deployment file: \$filename"
-                                                      envsubst < "\$file" > "rendered/\$filename"
-                                                    else
-                                                      echo "📄 Copying static file: \$filename"
-                                                      cp "\$file" "rendered/\$filename"
-                                                    fi
-                                                  done
-                                                
-                                                  echo "🔑 Setting up kubeconfig"
-                                                  aws eks update-kubeconfig --region us-east-1 --name fleetman-eks-cluster
-                                                
-                                                  echo "📡 Verifying access to cluster"
-                                                  kubectl get nodes
-                                                
-                                                  echo "🚀 Deploying all resources from rendered/"
-                                                  kubectl apply -f rendered/
-                                                  
+
+                                                    # Confirm access
+                                                    kubectl get nodes
+
+                                                    # Apply deployment
+                                                    kubectl apply -f rendered.yaml
+
                                                 """
                                         }
                                 }
