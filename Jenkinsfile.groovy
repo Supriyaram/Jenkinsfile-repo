@@ -128,7 +128,7 @@ pipeline {
                                         def deploymentFile = 'deploymentFile.yaml'
                                         env.ECR_IMAGE = "${repoUrl}:latest"
 
-                                        input message: 'Proceed to deploy to Production?', ok: 'Deploy'
+                                        
 
                                         withCredentials([
                                                 usernamePassword(
