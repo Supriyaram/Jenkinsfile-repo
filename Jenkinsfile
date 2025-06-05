@@ -144,7 +144,7 @@ pipeline {
                                                     export IMAGE=${env.ECR_IMAGE}
 
                                                     echo ${deploymentFile}
-                                                    envsubst < ${deploymentFile} > rendered.yamlAdd commentMore actions
+                                                    envsubst < ${deploymentFile} > rendered.yaml
                                                     cat rendered.yaml                             
 
                                                     # Configure kubeconfig
