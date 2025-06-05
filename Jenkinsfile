@@ -25,9 +25,9 @@ pipeline {
                                         sh "aws ec2 wait instance-status-ok --instance-ids ${instanceId}"
 
                                         def privateIP = sh(script: """
-                        aws ec2 describe-instances --instance-ids ${instanceId} \
-                        --query "Reservations[0].Instances[0].PrivateIpAddress" --output text
-                    """, returnStdout: true).trim()
+                                                aws ec2 describe-instances --instance-ids ${instanceId} \
+                                                --query "Reservations[0].Instances[0].PrivateIpAddress" --output text
+                                            """, returnStdout: true).trim()
 
                                         // Save instance ID and label to env for future stages
                                         env.SLAVE_LABEL = label
