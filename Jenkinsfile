@@ -44,12 +44,12 @@ pipeline {
                                 script {
                                         def repoUrl = (params.REPO_SELECTION == 'patient-management') ? env.REPO1_URL : env.REPO2_URL
                                         echo "Cloning repo: ${repoUrl} on branch: ${params.BRANCH_NAME}"
-                                       checkout([
-                                                        $class           : 'GitSCM',
-                                                        branches         : [[name: "*/${params.BRANCH_NAME}"]],
-                                                        userRemoteConfigs: [[url: repoUrl]]
-                                       ])
-                                                stash name: 'app-code'
+                                        checkout([
+                                                $class           : 'GitSCM',
+                                                branches         : [[name: "*/${params.BRANCH_NAME}"]],
+                                                userRemoteConfigs: [[url: repoUrl]]
+                                        ])
+                                        stash name: 'app-code'
                                 }
                         }
                 }
@@ -128,7 +128,7 @@ pipeline {
                                         def deploymentFile = 'deploymentFile.yaml'
                                         env.ECR_IMAGE = "${repoUrl}:latest"
 
-                                        
+
 
                                         withCredentials([
                                                 usernamePassword(
@@ -188,27 +188,27 @@ pipeline {
 }
 
 
- def launchEc2Instance(String label) {
+def launchEc2Instance(String label) {
         def templateId = "lt-026fe4def668209ae" // Replace with actual Launch Template ID
         withCredentials([
                 usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')
         ]) {
-                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-        def command = """
+                
+                sh "export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
+                sh "export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
+                def command = """
                 aws ec2 run-instances \
                 --launch-template LaunchTemplateId=${templateId} \
                 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=jenkins-${label}},{Key=jenkins-label,Value=${label}}]' \
                 --query 'Instances[0].InstanceId' \
                 --output text
             """
-        return sh(script: command, returnStdout: true).trim()
+                return sh(script: command, returnStdout: true).trim()
 
         }
- }
+}
 def terminateEc2Instance(String instanceId) {
         sh """
             aws ec2 terminate-instances --instance-ids ${instanceId}
         """
 }
-
