@@ -17,6 +17,7 @@ pipeline {
                 stage('Provision EC2 & Register Agent') {
                         steps {
                                 script {
+                                        sh "cd ~/.aws"
                                         def label = "agent-${env.BUILD_NUMBER}"
                                         def instanceId = launchEc2Instance(label)
 
