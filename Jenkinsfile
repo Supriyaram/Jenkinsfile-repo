@@ -114,7 +114,7 @@ pipeline {
                             envsubst < ${deploymentFile} > rendered.yaml
                             cat rendered.yaml                             
 
-                            aws eks update-kubeconfig --region us-east-1 --name fleetman-eks-cluster
+                            aws eks update-kubeconfig --region us-east-1 --name observability
                             kubectl get nodes
                             kubectl apply -f rendered.yaml
                         """
