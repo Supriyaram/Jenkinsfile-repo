@@ -123,7 +123,8 @@ pipeline {
 
                             aws eks update-kubeconfig --region us-east-1 --name observability
                             kubectl get nodes
-                            kubectl apply -f rendered.yaml
+                            kubectl create namespace dev
+                            kubectl apply -f rendered.yaml -n dev
                         """
                     }
                 }
