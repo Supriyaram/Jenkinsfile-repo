@@ -47,6 +47,13 @@ pipeline {
                         branches         : [[name: "*/${params.BRANCH_NAME}"]],
                         userRemoteConfigs: [[url: repoUrl]]
                     ])
+                    // Capture the checked-out repo's commit hash
+                    def COMMIT_HASH = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    echo "Selected Repo Commit Hash: ${COMMIT_HASH}"
+
+                    // Store in environment variable to use later in Docker stage
+                    env.APP_COMMIT_HASH = COMMIT_HASH
+                    
                     stash name: 'app-code'
                 }
             }
@@ -71,7 +78,7 @@ pipeline {
                 script {
                     env.IMAGE_NAME = "${params.REPO_SELECTION}"
                     def repoUrl = "203918864735.dkr.ecr.us-east-1.amazonaws.com/${env.IMAGE_NAME}-repo"
-                    def IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    def IMAGE_TAG = env.APP_COMMIT_HASH
                     env.ECR_IMAGE = "${repoUrl}:${IMAGE_TAG}"
 
                     withCredentials([
